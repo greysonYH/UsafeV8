@@ -5,10 +5,12 @@ import android.support.v7.app.AppCompatActivity;
 
 import com.example.greyson.test1.R;
 
+
 /**
  * Created by greyson on 22/3/17.
  */
 public class MainActivity extends AppCompatActivity {
+    private String key;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

@@ -11,6 +11,7 @@ import com.example.greyson.test1.R;
  */
 public class MainActivity extends AppCompatActivity {
     private String key;
+    private SplashActivity jksd;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

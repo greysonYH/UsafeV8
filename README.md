@@ -1,2 +1,3 @@
 # Usafe
-Iteration1
+
+Add Map in SafetyMapFragment.java

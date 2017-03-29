@@ -61,11 +61,10 @@ public class NetWorkApi {
             OkHttpClient okHttpClient = gradleOkHttp(context);
             mRetrofit = new Retrofit.Builder()
                     .baseUrl(ServerUrl.baseUrl)
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .addCallAdapterFactory(RxJavaCallAdapterFactory.create())////
+                    .client(okHttpClient)
                     .build();
-                    //.addConverterFactory(GsonConverterFactory.create())
-                    //.addCallAdapterFactory(RxJavaCallAdapterFactory.create())////
-                    //.client(okHttpClient)
-                    //.build();
         }
         return mRetrofit;
     }

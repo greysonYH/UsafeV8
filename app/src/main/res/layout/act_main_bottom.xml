@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="100dp"
+    android:layout_height="50dp"
     android:background="@android:color/white"
     android:orientation="horizontal"
     >
 
     <LinearLayout
-        android:id="@+id/ll_func1"
+        android:id="@+id/ll_safetymap"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
@@ -16,15 +16,16 @@
         android:orientation="vertical"
         >
 
-        <android.support.v7.widget.AppCompatButton
+        <TextView
             android:layout_width="wrap_content"
-            android:layout_height="80dp"
-            android:text="Function1"/>
+            android:layout_height="wrap_content"
+            android:text="Map"
+            android:textSize="30px"/>
 
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/ll_func2"
+        android:id="@+id/ll_safetybutton"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
@@ -33,15 +34,16 @@
         android:orientation="vertical"
         >
 
-        <android.support.v7.widget.AppCompatButton
+        <TextView
             android:layout_width="wrap_content"
-            android:layout_height="80dp"
-            android:text="Function2" />
+            android:layout_height="wrap_content"
+            android:text="Button"
+            android:textSize="30px"/>
 
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/ll_func3"
+        android:id="@+id/ll_safetytrack"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
@@ -50,16 +52,17 @@
         android:orientation="vertical"
         >
 
-        <android.support.v7.widget.AppCompatButton
+        <TextView
             android:layout_width="wrap_content"
-            android:layout_height="80dp"
-            android:text="Function3"/>
+            android:layout_height="wrap_content"
+            android:text="Track"
+            android:textSize="30px"/>
 
     </LinearLayout>
 
 
     <LinearLayout
-        android:id="@+id/ll_func4"
+        android:id="@+id/ll_safetymore"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
@@ -68,10 +71,11 @@
         android:orientation="vertical"
         >
 
-        <android.support.v7.widget.AppCompatButton
+        <TextView
             android:layout_width="wrap_content"
-            android:layout_height="80dp"
-            android:text="Function4"/>
+            android:layout_height="wrap_content"
+            android:text="More"
+            android:textSize="30px"/>
 
     </LinearLayout>
 

@@ -23,7 +23,6 @@ public abstract class BaseFragment extends RxFragment {
     protected Context mContext;
     protected Retrofit mRetrofit = WSAppContext.getInstance().getRetrofit();
     protected Resources mResources = WSAppContext.getInstance().getmResources();
-    private SweetAlertDialog mSADialog;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -55,28 +54,6 @@ public abstract class BaseFragment extends RxFragment {
         super.onDestroyView();
         destroyView();
     }
-
-    protected void showWaitDialog(String message) {
-        if (mSADialog == null) {
-            mSADialog = new SweetAlertDialog(mContext, SweetAlertDialog.PROGRESS_TYPE);
-            mSADialog.getProgressHelper().setBarColor(Color.parseColor("#2a95dd"));
-            mSADialog.setTitleText(message);
-            mSADialog.setCancelable(false);
-            mSADialog.show();
-        } else {
-            mSADialog.setTitleText(message);
-            mSADialog.show();
-        }
-
-    }
-
-    protected void hideWaitDialog() {
-        if (mSADialog != null) {
-            mSADialog.dismiss();
-        }
-
-    }
-
 
     protected abstract View initView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) ;
 

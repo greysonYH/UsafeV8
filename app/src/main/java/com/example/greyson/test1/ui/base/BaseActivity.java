@@ -20,7 +20,6 @@ public abstract class BaseActivity extends RxAppCompatActivity{
 
     protected Retrofit mRetrofit = WSAppContext.getInstance().getRetrofit();
     protected Resources mResources = WSAppContext.getInstance().getmResources();
-    private SweetAlertDialog mSADialog;
 
 
     @Override
@@ -31,27 +30,7 @@ public abstract class BaseActivity extends RxAppCompatActivity{
         initData();
     }
 
-    protected void showWaitDialog(String message) {
-        if (mSADialog == null) {
-            mSADialog = new SweetAlertDialog(this, SweetAlertDialog.PROGRESS_TYPE);
-            mSADialog.getProgressHelper().setBarColor(Color.parseColor("#2a95dd"));
-            mSADialog.setTitleText(message);
-            mSADialog.setCancelable(false);
-            mSADialog.show();
-        } else {
-            mSADialog.setTitleText(message);
-            mSADialog.show();
-        }
 
-
-    }
-
-    protected void hideWaitDialog() {
-        if (mSADialog != null) {
-            mSADialog.dismiss();
-        }
-
-    }
 
     @Override
     protected void onDestroy() {

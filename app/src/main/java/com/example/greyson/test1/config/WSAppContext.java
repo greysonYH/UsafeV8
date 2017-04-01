@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.res.Resources;
 
 import com.example.greyson.test1.net.NetWorkApi;
-import com.example.greyson.test1.service.AppInitService;
 
 import retrofit2.Retrofit;
 
@@ -30,7 +29,6 @@ public class WSAppContext extends Application{
         mContext = WSAppContext.getInstance().getApplicationContext();
         mResources = mContext.getResources();
         mRetrofit = NetWorkApi.getInstance().gradleRetrofit(this);
-        AppInitService.startService(this);
     }
 
     public static synchronized WSAppContext getInstance() {

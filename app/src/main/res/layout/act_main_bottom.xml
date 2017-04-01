@@ -23,7 +23,10 @@
             android:textSize="30px"/>
 
     </LinearLayout>
-
+    <View
+        android:layout_width="1px"
+        android:background="@color/colorLine"
+        android:layout_height="match_parent"/>
     <LinearLayout
         android:id="@+id/ll_safetybutton"
         android:layout_width="0dp"
@@ -41,7 +44,10 @@
             android:textSize="30px"/>
 
     </LinearLayout>
-
+    <View
+        android:layout_width="1px"
+        android:background="@color/colorLine"
+        android:layout_height="match_parent"/>
     <LinearLayout
         android:id="@+id/ll_safetytrack"
         android:layout_width="0dp"
@@ -59,8 +65,10 @@
             android:textSize="30px"/>
 
     </LinearLayout>
-
-
+    <View
+        android:layout_width="1px"
+        android:background="@color/colorLine"
+        android:layout_height="match_parent"/>
     <LinearLayout
         android:id="@+id/ll_safetymore"
         android:layout_width="0dp"

@@ -5,8 +5,5 @@ package com.example.greyson.test1.net;
  */
 
 public class ServerUrl {
-
-    public static final String baseUrl1 = "http://99dai.youchepai.com/";///
-    public static final String baseUrl = "https://api.github.com/";///
-
+    public static final String baseUrl = "http://usafe.epnjkefarc.us-west-2.elasticbeanstalk.com/safeplace/?format=json&suburb=Malvern+East";///
 }

@@ -7,7 +7,6 @@ import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
-import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,7 +37,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
@@ -128,20 +126,15 @@ public class SafetyMapFragment extends BaseFragment implements GoogleApiClient.C
         LatLng latLng = getCurrentLocation();
         googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
         googleMap.animateCamera(CameraUpdateFactory.zoomTo(15));
-        if (getDistance(latLng.latitude, latLng.longitude) < 1500) {
-            googleMap.addMarker(new MarkerOptions().position(new LatLng(-37.881035, 145.023311)).title("Police Station"));
-        }
-        googleMap.addMarker(new MarkerOptions().position(new LatLng(-37.876706, 145.042315) ).title("7-11"));
-        googleMap.addMarker(new MarkerOptions().position(new LatLng(-37.876095,145.047812)).title("McDonald"));
-
+        if (getDistance(latLng.latitude, latLng.longitude) < 1500) {}
         Map<String, String> params = new HashMap<>();
         params.put("", "");
         mRetrofit.create(WSNetService.class)
                 .getSafePlaceData(params)
                 .subscribeOn(Schedulers.io())
-                .compose(this.<SafePlaceRes>bindToLifecycle())
+                .compose(this.<List<SafePlaceRes>>bindToLifecycle())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Subscriber<SafePlaceRes>() {
+                .subscribe(new Subscriber<List<SafePlaceRes>>() {
                     @Override
                     public void onCompleted() {}
 
@@ -149,14 +142,19 @@ public class SafetyMapFragment extends BaseFragment implements GoogleApiClient.C
                     public void onError(Throwable e) {}
 
                     @Override
-                    public void onNext(SafePlaceRes safePlaceRes) {
-                        Double lat = safePlaceRes.getLatitude();
-                        Double lng = safePlaceRes.getLongtitude();
-                        String type = safePlaceRes.getType();
-                        googleMap.addMarker(new MarkerOptions().position(new LatLng(lat, lng)).title(type));
+                    public void onNext(List<SafePlaceRes> safePlaceRes) {
+                        showMarker(safePlaceRes);
                     }
-
                 });
+    }
+
+    private void showMarker(List<SafePlaceRes> safePlaceResList) {
+        for (SafePlaceRes sfRes:safePlaceResList) {
+            Double lat = sfRes.getLatitude();
+            Double lng = sfRes.getLongtitude();
+            String type = sfRes.getType();
+            googleMap.addMarker(new MarkerOptions().position(new LatLng(lat, lng)).title(type));
+        }
     }
 
     public double getDistance(double a, double b) {
@@ -229,37 +227,40 @@ public class SafetyMapFragment extends BaseFragment implements GoogleApiClient.C
                     String lng = lngPlist.get(i);
                     LatLng l =new LatLng(Double.parseDouble(lat),Double.parseDouble(lng));
                     googleMap.addMarker(new MarkerOptions().position(l)
-                            .icon(BitmapDescriptorFactory
-                                    .defaultMarker(BitmapDescriptorFactory.HUE_ROSE)));
+                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE)));
                 }
             }
         }
-        googleMap.addMarker(new MarkerOptions().position(latLng).draggable(true)
-                .title("Drag and Drop this new pin")
+        Marker pinMarker = googleMap.addMarker(new MarkerOptions().position(latLng).draggable(true)
+                .title("New Event Pin").snippet("Drag abd Drop :)")
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)));
+        pinMarker.showInfoWindow();
         GoogleMap.OnMarkerDragListener mkDragListener = new GoogleMap.OnMarkerDragListener() {
             @Override
             public void onMarkerDragStart(Marker marker) {
-                prefs.edit().putStringSet("Lat",latSet).clear();
-                prefs.edit().putStringSet("Lng",lngSet).clear();
+                marker.setSnippet("Drag me");
+                marker.showInfoWindow();
             }
 
             @Override
             public void onMarkerDrag(Marker marker) {
-
+                marker.setSnippet("Drop me");
+                marker.showInfoWindow();
             }
 
             @Override
             public void onMarkerDragEnd(Marker marker) {
                 LatLng latLng = marker.getPosition();
-                marker.setTitle("My Pin");
-                marker.setSnippet(latLng.toString());
+                marker.setTitle("Pin Saved");
+                marker.setSnippet("Sorry, can not drag again");
+                marker.setDraggable(false);
                 marker.showInfoWindow();
                 latSet.add(String.valueOf(latLng.latitude));
                 lngSet.add(String.valueOf(latLng.longitude));
-                prefs.edit().putStringSet("Lat",latSet).apply();
-                prefs.edit().putStringSet("Lng",lngSet).apply();
+                prefs.edit().putStringSet("Lat",latSet).commit();
+                prefs.edit().putStringSet("Lng",lngSet).commit();
             }
+
         };
         googleMap.setOnMarkerDragListener(mkDragListener);
 
@@ -303,9 +304,9 @@ public class SafetyMapFragment extends BaseFragment implements GoogleApiClient.C
         mRetrofit.create(WSNetService.class)
                 .getSafePlaceData(params)
                 .subscribeOn(Schedulers.io())
-                .compose(this.<SafePlaceRes>bindToLifecycle())
+                .compose(this.<List<SafePlaceRes>>bindToLifecycle())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Subscriber<SafePlaceRes>() {
+                .subscribe(new Subscriber<List<SafePlaceRes>>() {
                     @Override
                     public void onCompleted() {}
 
@@ -313,11 +314,8 @@ public class SafetyMapFragment extends BaseFragment implements GoogleApiClient.C
                     public void onError(Throwable e) {}
 
                     @Override
-                    public void onNext(SafePlaceRes safePlaceRes) {
-                        Double lat = safePlaceRes.getLatitude();
-                        Double lng = safePlaceRes.getLongtitude();
-                        String type = safePlaceRes.getType();
-                        googleMap.addMarker(new MarkerOptions().position(new LatLng(lat, lng)).title(type));
+                    public void onNext(List<SafePlaceRes> safePlaceRes) {
+                        showMarker(safePlaceRes);
                     }
 
         });

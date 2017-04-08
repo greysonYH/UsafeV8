@@ -1,6 +1,7 @@
 package com.example.greyson.test1.ui.fragment;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -16,6 +17,7 @@ import android.widget.LinearLayout;
 import com.example.greyson.test1.R;
 import com.example.greyson.test1.entity.SafePlaceRes;
 import com.example.greyson.test1.net.WSNetService;
+import com.example.greyson.test1.ui.activity.MapSettingActivity;
 import com.example.greyson.test1.ui.base.BaseFragment;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -89,8 +91,9 @@ public class SafetyMapFragment extends BaseFragment implements GoogleApiClient.C
         // Create the LocationRequest object
         mLocationRequest = LocationRequest.create()
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                .setInterval(2000)        // 1 seconds, in milliseconds
-                .setFastestInterval(1000); // 1 second, in milliseconds
+                .setInterval(15000)        // 30 seconds, in milliseconds
+                .setFastestInterval(15000) // 30 second, in milliseconds
+                .setSmallestDisplacement(1); // 1 meter
         return view;
     }
 
@@ -114,27 +117,44 @@ public class SafetyMapFragment extends BaseFragment implements GoogleApiClient.C
         googleMap.getUiSettings().setZoomControlsEnabled(true);  //
         googleMap.getUiSettings().setCompassEnabled(true);       //
         googleMap.getUiSettings().setMapToolbarEnabled(true);
-        googleMap.animateCamera(CameraUpdateFactory.zoomBy(13));
+        googleMap.animateCamera(CameraUpdateFactory.zoomTo(14));
     }
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-        handleNewLocation();
+        if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION) !=
+                PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_COARSE_LOCATION) !=
+                        PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+        if (mLLSafePlace.isSelected()==true) {
+            handleNewLocation();
+        }
     }
 
     private void handleNewLocation() {
         LatLng latLng = getCurrentLocation();
         googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-        googleMap.animateCamera(CameraUpdateFactory.zoomTo(15));
+        googleMap.animateCamera(CameraUpdateFactory.zoomTo(14));
         if (getDistance(latLng.latitude, latLng.longitude) < 1500) {}
         Map<String, String> params = new HashMap<>();
-        params.put("", "");
+        params.put("lat", String.valueOf(latLng.latitude));
+        params.put("lng", String.valueOf(latLng.longitude));
         mRetrofit.create(WSNetService.class)
                 .getSafePlaceData(params)
                 .subscribeOn(Schedulers.io())
-                .compose(this.<List<SafePlaceRes>>bindToLifecycle())
+                .compose(this.<SafePlaceRes>bindToLifecycle())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Subscriber<List<SafePlaceRes>>() {
+                .subscribe(new Subscriber<SafePlaceRes>() {
                     @Override
                     public void onCompleted() {}
 
@@ -142,16 +162,17 @@ public class SafetyMapFragment extends BaseFragment implements GoogleApiClient.C
                     public void onError(Throwable e) {}
 
                     @Override
-                    public void onNext(List<SafePlaceRes> safePlaceRes) {
+                    public void onNext(SafePlaceRes safePlaceRes) {
                         showMarker(safePlaceRes);
                     }
                 });
     }
 
-    private void showMarker(List<SafePlaceRes> safePlaceResList) {
-        for (SafePlaceRes sfRes:safePlaceResList) {
+    private void showMarker(SafePlaceRes safePlaceRes) {
+        googleMap.clear();
+        for (SafePlaceRes.ResultsBean sfRes:safePlaceRes.getResults()) {
             Double lat = sfRes.getLatitude();
-            Double lng = sfRes.getLongtitude();
+            Double lng = sfRes.getLongitude();
             String type = sfRes.getType();
             googleMap.addMarker(new MarkerOptions().position(new LatLng(lat, lng)).title(type));
         }
@@ -176,7 +197,6 @@ public class SafetyMapFragment extends BaseFragment implements GoogleApiClient.C
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
         }
-        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
         Location location = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
         double currentLatitude = location.getLatitude();
         double currentLongitude = location.getLongitude();
@@ -187,6 +207,7 @@ public class SafetyMapFragment extends BaseFragment implements GoogleApiClient.C
     @Override
     protected void initEvent() {
         mLLSafePlace.setOnClickListener(this);
+        mLLSafePlace.setSelected(true);
         mLLSafePin.setOnClickListener(this);
     }
 
@@ -197,10 +218,12 @@ public class SafetyMapFragment extends BaseFragment implements GoogleApiClient.C
         switch (v.getId()) {
             case R.id.ll_safetyplace:
                 mLLSafePlace.setSelected(true);
+                mLLSafePin.setSelected(false);
                 initPlaceMap();
                 break;
             case R.id.ll_safetypin:
                 mLLSafePin.setSelected(true);
+                mLLSafePlace.setSelected(false);
                 initPinMap();
                 break;
         }
@@ -208,6 +231,9 @@ public class SafetyMapFragment extends BaseFragment implements GoogleApiClient.C
 
     private void initPlaceMap() {
         googleMap.clear();
+        LatLng latLng = getCurrentLocation();
+        googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+        googleMap.animateCamera(CameraUpdateFactory.zoomTo(14));
         handleNewLocation();
     }
 
@@ -231,8 +257,8 @@ public class SafetyMapFragment extends BaseFragment implements GoogleApiClient.C
                 }
             }
         }
-        Marker pinMarker = googleMap.addMarker(new MarkerOptions().position(latLng).draggable(true)
-                .title("New Event Pin").snippet("Drag abd Drop :)")
+            Marker pinMarker = googleMap.addMarker(new MarkerOptions().position(latLng).draggable(true)
+                .title("New Incident Pin").snippet("Drag and Drop :)")
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)));
         pinMarker.showInfoWindow();
         GoogleMap.OnMarkerDragListener mkDragListener = new GoogleMap.OnMarkerDragListener() {
@@ -264,6 +290,18 @@ public class SafetyMapFragment extends BaseFragment implements GoogleApiClient.C
         };
         googleMap.setOnMarkerDragListener(mkDragListener);
 
+        GoogleMap.OnMarkerClickListener mkClickListener = new GoogleMap.OnMarkerClickListener(){
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+                if (mLLSafePin.isSelected() == true) {
+                    startActivity(new Intent(mContext, MapSettingActivity.class));
+                    initPinMap();
+                } else {marker.showInfoWindow();}
+                return true;
+            }
+        };
+        googleMap.setOnMarkerClickListener(mkClickListener);
+
     }
 
     @Override
@@ -277,14 +315,14 @@ public class SafetyMapFragment extends BaseFragment implements GoogleApiClient.C
 
     @Override
     public void onLocationChanged(Location location) {
-        googleMap.clear();
-        handleNewLocation();
+        if (mLLSafePin.isSelected() == false) {handleNewLocation();}
     }
 
     @Override
     public void onResume() {
         super.onResume();
         mGoogleApiClient.connect();
+
 
     }
 
@@ -298,15 +336,14 @@ public class SafetyMapFragment extends BaseFragment implements GoogleApiClient.C
 
     @Override
     protected void initData() {
-        //String requestPlace = "df";
         Map<String, String> params = new HashMap<>();
         params.put("", "");
         mRetrofit.create(WSNetService.class)
                 .getSafePlaceData(params)
                 .subscribeOn(Schedulers.io())
-                .compose(this.<List<SafePlaceRes>>bindToLifecycle())
+                .compose(this.<SafePlaceRes>bindToLifecycle())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Subscriber<List<SafePlaceRes>>() {
+                .subscribe(new Subscriber<SafePlaceRes>() {
                     @Override
                     public void onCompleted() {}
 
@@ -314,7 +351,7 @@ public class SafetyMapFragment extends BaseFragment implements GoogleApiClient.C
                     public void onError(Throwable e) {}
 
                     @Override
-                    public void onNext(List<SafePlaceRes> safePlaceRes) {
+                    public void onNext(SafePlaceRes safePlaceRes) {
                         showMarker(safePlaceRes);
                     }
 

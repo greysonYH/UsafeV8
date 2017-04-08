@@ -5,5 +5,7 @@ package com.example.greyson.test1.net;
  */
 
 public class ServerUrl {
-    public static final String baseUrl = "http://usafe.epnjkefarc.us-west-2.elasticbeanstalk.com/safeplace/?format=json&suburb=Malvern+East";///
+    public static final String baseUrl = "http://usafe2.epnjkefarc.us-west-2.elasticbeanstalk.com/safeplace/location/?format=json";///
+    //http://usafe.epnjkefarc.us-west-2.elasticbeanstalk.com/safeplace/location/?format=json&lat=-37.81&lng=144.96
+    //http://usafe2.epnjkefarc.us-west-2.elasticbeanstalk.com/safeplace/location/?format=json&lat=-37.877010&lng=145.044267
 }

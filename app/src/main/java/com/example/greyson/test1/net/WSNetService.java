@@ -18,6 +18,6 @@ public interface WSNetService {
     /**
      * SafePlace Request
      */
-    @GET("?format=json&suburb=Malvern+East")
-    Observable<List<SafePlaceRes>> getSafePlaceData(@QueryMap Map<String, String> params);
+    @GET("?format=json&")
+    Observable<SafePlaceRes> getSafePlaceData(@QueryMap Map<String, String> params);
 }

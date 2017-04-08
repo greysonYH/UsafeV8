@@ -7,7 +7,7 @@
     >
 
     <LinearLayout
-        android:id="@+id/ll_safetyplace"
+        android:id="@+id/ll_startbutton"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
@@ -19,7 +19,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Find Safety Place"
+            android:text="Start Button"
             android:textSize="30px"/>
 
     </LinearLayout>
@@ -30,7 +30,7 @@
         android:layout_height="match_parent"/>
 
     <LinearLayout
-        android:id="@+id/ll_safetypin"
+        android:id="@+id/ll_cancelbutton"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
@@ -42,12 +42,32 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Pin Incident"
+            android:text="Cancel Button"
             android:textSize="30px"/>
 
     </LinearLayout>
 
+    <View
+        android:layout_width="1px"
+        android:background="@color/colorLine"
+        android:layout_height="match_parent"/>
 
+    <LinearLayout
+        android:id="@+id/ll_settingbutton"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:background="?android:attr/selectableItemBackground"
+        android:gravity="center"
+        android:orientation="vertical"
+        >
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Setting Button"
+            android:textSize="30px"/>
+
+    </LinearLayout>
 
 </LinearLayout>

@@ -13,5 +13,6 @@ public interface Constants {
     String INTENT_ACTION_USER_LOGOUT = "intent.action.USER_LOGOUT";
     String INTENT_ACTION_SELECT_FRAG_MAP = "intent.action.FRAG_MAP";
     String INTENT_ACTION_SELECT_FRAG_TRACK = "intent.action.FRAG_TRACK";
+    String REQUEST_FINE_LOCATION = "fine";
 
 }

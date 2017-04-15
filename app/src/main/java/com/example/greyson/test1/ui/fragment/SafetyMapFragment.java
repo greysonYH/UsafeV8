@@ -13,6 +13,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 
 import com.example.greyson.test1.R;
@@ -66,6 +67,9 @@ public class SafetyMapFragment extends BaseFragment implements GoogleApiClient.C
     SharedPreferences prefs = null;//
     Set<String> latSet = new HashSet<>();
     Set<String> lngSet = new HashSet<>();
+
+    private Marker tempMarker;
+    private int temindex;
 
     @Override
     protected View initView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -122,8 +126,10 @@ public class SafetyMapFragment extends BaseFragment implements GoogleApiClient.C
         if(ActivityCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION) ==
                 PackageManager.PERMISSION_GRANTED) {
             googleMap.setMyLocationEnabled(true);
-            if (mLLSafePin.isSelected() == true) {initPinMap();}
+            if (mLLSafePin.isSelected() == true && temindex != 1) {initPinMap();}
+            else if(mLLSafePin.isSelected() == true && temindex == 1){initPinMap1();}////
             else {initPlaceMap();}
+            temindex = 0;
         }
     }
 
@@ -159,11 +165,68 @@ public class SafetyMapFragment extends BaseFragment implements GoogleApiClient.C
 
     private void showMarker(SafePlaceRes safePlaceRes) {
         googleMap.clear();
+        String message = safePlaceRes.getMessage();
+        if (message.equalsIgnoreCase("5 KM"))
+        {
+            googleMap.animateCamera(CameraUpdateFactory.zoomTo(12));
+            Toast.makeText(mContext, "There are no Safe Place in 2KM, Change to 5KM",Toast.LENGTH_LONG).show();
+        }
+        else if (message.equalsIgnoreCase("Nothing found"))
+        {Toast.makeText(mContext, "There are no Safe Place in 5KM",Toast.LENGTH_LONG).show();}
         for (SafePlaceRes.ResultsBean sfRes : safePlaceRes.getResults()) {
             Double lat = sfRes.getLatitude();
             Double lng = sfRes.getLongitude();
             String type = sfRes.getType();
-            googleMap.addMarker(new MarkerOptions().position(new LatLng(lat, lng)).title(type));
+            switch (type) {
+                case "Firestation":
+                    googleMap.addMarker(new MarkerOptions()
+                            .position(new LatLng(lat, lng))
+                            .title(type)
+                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.safeplace_f)));
+                    break;
+                case "Convenience Shop":
+                    googleMap.addMarker(new MarkerOptions()
+                            .position(new LatLng(lat, lng))
+                            .title(type)
+                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.safeplace_7)));
+                    break;
+                case "Petrol Station":
+                    googleMap.addMarker(new MarkerOptions()
+                            .position(new LatLng(lat, lng))
+                            .title(type)
+                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.safeplace_g)));
+                    break;
+                case "Restaurant":
+                    googleMap.addMarker(new MarkerOptions()
+                            .position(new LatLng(lat, lng))
+                            .title(type)
+                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.safeplace_m)));
+                    break;
+                case "Police Station":
+                    googleMap.addMarker(new MarkerOptions()
+                            .position(new LatLng(lat,lng))
+                            .title(type)
+                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.safeplace_p)));
+                    break;
+                case "Hospital":
+                    googleMap.addMarker(new MarkerOptions()
+                            .position(new LatLng(lat,lng))
+                            .title(type)
+                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.safeplace_h)));
+                    break;
+                case "Supermarket":
+                    googleMap.addMarker(new MarkerOptions()
+                            .position(new LatLng(lat,lng))
+                            .title(type)
+                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.safeplace_s)));
+                    break;
+                default:
+                    googleMap.addMarker(new MarkerOptions()
+                            .position(new LatLng(lat,lng))
+                            .title(type));
+            }
+            //googleMap.addMarker(new MarkerOptions().position(new LatLng(lat, lng)).title(type));
+
         }
     }
 
@@ -240,7 +303,11 @@ public class SafetyMapFragment extends BaseFragment implements GoogleApiClient.C
         googleMap.animateCamera(CameraUpdateFactory.zoomTo(14));
         handleNewLocation();
     }
-
+    private void initPinMap1() {
+        LatLng latLng = getCurrentLocation();
+        googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+        googleMap.animateCamera(CameraUpdateFactory.zoomTo(18));
+    }
     private void initPinMap() {
         googleMap.clear();
         LatLng latLng = getCurrentLocation();
@@ -284,14 +351,18 @@ public class SafetyMapFragment extends BaseFragment implements GoogleApiClient.C
             @Override
             public void onMarkerDragEnd(Marker marker) {
                 LatLng latLng = marker.getPosition();
-                marker.setTitle("Click here for setting");
-                marker.setSnippet("Can not drag again");
+                //marker.setTitle("Click here for setting");
+                marker.setSnippet("Click here for setting");
+                //marker.setSnippet("Can not drag again");
                 marker.setDraggable(false);
                 marker.showInfoWindow();
                 latSet.add(String.valueOf(latLng.latitude));
                 lngSet.add(String.valueOf(latLng.longitude));
                 prefs.edit().putStringSet("Lat",latSet).commit();
                 prefs.edit().putStringSet("Lng",lngSet).commit();
+
+
+
             }
         });
 
@@ -299,8 +370,8 @@ public class SafetyMapFragment extends BaseFragment implements GoogleApiClient.C
             @Override
             public boolean onMarkerClick(Marker marker) {
                 if (mLLSafePin.isSelected() == true) {
-                    marker.setTitle("Hi");
-                    marker.setSnippet("Click here for setting");
+                    marker.setTitle("Click here for setting");
+                    //marker.setSnippet("Click here for setting");
                     marker.showInfoWindow();
                 }else{
                     marker.showInfoWindow();
@@ -315,12 +386,15 @@ public class SafetyMapFragment extends BaseFragment implements GoogleApiClient.C
                 if (mLLSafePin.isSelected() == true) {
                     Intent intent = new Intent();
                     intent.setClass(mContext, MapSettingActivity.class);
-                    intent.putExtra("pincolor", "red");
-                    startActivityForResult(intent,0);
+                    marker.setTag("1");
+                    intent.putExtra("Marker", "marker");
+                    tempMarker = marker;///
+                    temindex = 1;
+                    startActivityForResult(intent, 1);
                     // marker
                     //startActivity(new Intent(mContext, MapSettingActivity.class));
                     //
-                    initPinMap();
+                    //initPinMap();
                 }
             }
         });
@@ -329,8 +403,54 @@ public class SafetyMapFragment extends BaseFragment implements GoogleApiClient.C
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == 2) {
+            if (requestCode == 1) {
+                Bundle b = data.getExtras();
+                String str = b.getString("color");
+
+                //Toast.makeText(mContext, str,Toast.LENGTH_SHORT).show();
+                setMarkerColor(tempMarker, str);
+                tempMarker.showInfoWindow();
+            }
+        }
     }
 
+    private void setMarkerColor(Marker marker, String color) {
+        switch (color) {
+            case "Assault(Orange)":
+                marker.setTitle("Assault");
+                marker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE));
+                break;
+            case "Theft(Yellow)":
+                marker.setTitle("Theft");
+                marker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW));
+                break;
+            case "Robbery(Green)":
+                marker.setTitle("Robbery");
+                marker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+                break;
+            case "Rape(Cyan)":
+                marker.setTitle("Rape");
+                marker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN));
+                break;
+            case "Harassment(Azure)":
+                marker.setTitle("Harassment");
+                marker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+                break;
+            case "Discrimination(Blue)":
+                marker.setTitle("Discrimination");
+                marker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
+                break;
+            case "Abduction(Magenta)":
+                marker.setTitle("Abduction");
+                marker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
+                break;
+            default:
+                marker.setTitle("Others");
+                marker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE));
+                break;
+        }
+    }
     @Override
     public void onConnectionSuspended(int i) {
     }

@@ -8,12 +8,12 @@ import java.io.Serializable;
 
 public class MyMarker implements Serializable {
     private String mkTag;
-    private String mkLat;
-    private String mkLnt;
+    private Double mkLat;
+    private Double mkLnt;
     private String mkColor;
     private String mkDescription;
 
-    public MyMarker(String mkTag, String mkLat, String mkLnt, String mkColor, String mkDescription) {
+    public MyMarker(String mkTag, Double mkLat, Double mkLnt, String mkColor, String mkDescription) {
         this.mkTag = mkTag;
         this.mkLat = mkLat;
         this.mkLnt = mkLnt;
@@ -29,19 +29,19 @@ public class MyMarker implements Serializable {
         this.mkTag = mkTag;
     }
 
-    public String getMkLat() {
+    public Double getMkLat() {
         return mkLat;
     }
 
-    public void setMkLat(String mkLat) {
+    public void setMkLat(Double mkLat) {
         this.mkLat = mkLat;
     }
 
-    public String getMkLnt() {
+    public Double getMkLnt() {
         return mkLnt;
     }
 
-    public void setMkLnt(String mkLnt) {
+    public void setMkLnt(Double mkLnt) {
         this.mkLnt = mkLnt;
     }
 

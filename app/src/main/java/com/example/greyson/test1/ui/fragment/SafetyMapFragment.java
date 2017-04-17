@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.util.ArraySet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,10 +18,13 @@ import android.widget.Toast;
 
 
 import com.example.greyson.test1.R;
+import com.example.greyson.test1.entity.MyMarker;
 import com.example.greyson.test1.entity.SafePlaceRes;
+import com.example.greyson.test1.entity.UserPinHistory;
 import com.example.greyson.test1.net.WSNetService;
 import com.example.greyson.test1.ui.activity.MapSettingActivity;
 import com.example.greyson.test1.ui.base.BaseFragment;
+import com.example.greyson.test1.utils.StringUtils;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
@@ -34,12 +38,15 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import rx.Subscriber;
@@ -64,12 +71,7 @@ public class SafetyMapFragment extends BaseFragment implements GoogleApiClient.C
 
     private LinearLayout mLLSafePlace;
     private LinearLayout mLLSafePin;
-    SharedPreferences prefs = null;//
-    Set<String> latSet = new HashSet<>();
-    Set<String> lngSet = new HashSet<>();
-
-    private Marker tempMarker;
-    private int temindex;
+    private SharedPreferences preferences;
 
     @Override
     protected View initView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -126,10 +128,8 @@ public class SafetyMapFragment extends BaseFragment implements GoogleApiClient.C
         if(ActivityCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION) ==
                 PackageManager.PERMISSION_GRANTED) {
             googleMap.setMyLocationEnabled(true);
-            if (mLLSafePin.isSelected() == true && temindex != 1) {initPinMap();}
-            else if(mLLSafePin.isSelected() == true && temindex == 1){initPinMap1();}////
+            if (mLLSafePin.isSelected() == true) {initPinMap();}
             else {initPlaceMap();}
-            temindex = 0;
         }
     }
 
@@ -313,23 +313,9 @@ public class SafetyMapFragment extends BaseFragment implements GoogleApiClient.C
         LatLng latLng = getCurrentLocation();
         googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
         googleMap.animateCamera(CameraUpdateFactory.zoomTo(18));
-        prefs = mContext.getSharedPreferences("LatLng",MODE_PRIVATE);
-        if((prefs.contains("Lat")) && (prefs.contains("Lng")))
-        {
-            List<String> latPlist = new ArrayList<>(prefs.getStringSet("Lat",null));
-            List<String> lngPlist = new ArrayList<>(prefs.getStringSet("Lng",null));
-            latSet = new HashSet<>(latPlist);
-            lngSet = new HashSet<>(lngPlist);
-            if (latPlist.size() == lngPlist.size()) {
-                for (int i = 0; i< latPlist.size();i++) {
-                    String lat = latPlist.get(i);
-                    String lng = lngPlist.get(i);
-                    LatLng l =new LatLng(Double.parseDouble(lat),Double.parseDouble(lng));
-                    googleMap.addMarker(new MarkerOptions().position(l)
-                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE)));
-                }
-            }
-        }
+        preferences = mContext.getSharedPreferences("LocalUser",MODE_PRIVATE);
+        showMarkerFromSharedPreference(getObjectFromSharedPreference("admin"));
+
         Marker pinMarker = googleMap.addMarker(new MarkerOptions().position(latLng)
                 .draggable(true).title("New Incident Pin").snippet("Drag and Drop :)")
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)));
@@ -350,19 +336,8 @@ public class SafetyMapFragment extends BaseFragment implements GoogleApiClient.C
 
             @Override
             public void onMarkerDragEnd(Marker marker) {
-                LatLng latLng = marker.getPosition();
-                //marker.setTitle("Click here for setting");
                 marker.setSnippet("Click here for setting");
-                //marker.setSnippet("Can not drag again");
-                marker.setDraggable(false);
                 marker.showInfoWindow();
-                latSet.add(String.valueOf(latLng.latitude));
-                lngSet.add(String.valueOf(latLng.longitude));
-                prefs.edit().putStringSet("Lat",latSet).commit();
-                prefs.edit().putStringSet("Lng",lngSet).commit();
-
-
-
             }
         });
 
@@ -370,8 +345,7 @@ public class SafetyMapFragment extends BaseFragment implements GoogleApiClient.C
             @Override
             public boolean onMarkerClick(Marker marker) {
                 if (mLLSafePin.isSelected() == true) {
-                    marker.setTitle("Click here for setting");
-                    //marker.setSnippet("Click here for setting");
+                    //marker.setSnippet("Click here for setting");//
                     marker.showInfoWindow();
                 }else{
                     marker.showInfoWindow();
@@ -384,36 +358,128 @@ public class SafetyMapFragment extends BaseFragment implements GoogleApiClient.C
             @Override
             public void onInfoWindowClick(Marker marker) {
                 if (mLLSafePin.isSelected() == true) {
-                    Intent intent = new Intent();
-                    intent.setClass(mContext, MapSettingActivity.class);
-                    marker.setTag("1");
-                    intent.putExtra("Marker", "marker");
-                    tempMarker = marker;///
-                    temindex = 1;
-                    startActivityForResult(intent, 1);
-                    // marker
-                    //startActivity(new Intent(mContext, MapSettingActivity.class));
-                    //
-                    //initPinMap();
+                    sendPinStatus(marker);
                 }
             }
         });
     }
 
+    public void sendPinStatus (Marker marker) {
+        Intent intent = new Intent();
+        intent.setClass(mContext, MapSettingActivity.class);
+        String markerTag;
+        String markerStatus;
+        markerTag = (String) marker.getTag();
+        markerStatus = "old";
+        if (markerTag == null){
+            markerStatus = "new";
+            int listSize = getObjectFromSharedPreference("admin").getMmk().size();
+            String pinIndex = String.valueOf(listSize);
+            markerTag = pinIndex;
+            marker.setSnippet("");
+        }
+        intent.putExtra("status", markerStatus);
+        intent.putExtra("tag", markerTag);
+        intent.putExtra("lat", marker.getPosition().latitude);
+        intent.putExtra("lng", marker.getPosition().longitude);
+        intent.putExtra("note", marker.getSnippet());
+        startActivityForResult(intent, 1);
+    }
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == 2) {
-            if (requestCode == 1) {
-                Bundle b = data.getExtras();
-                String str = b.getString("color");
+        if (resultCode == 0) {
 
-                //Toast.makeText(mContext, str,Toast.LENGTH_SHORT).show();
-                setMarkerColor(tempMarker, str);
-                tempMarker.showInfoWindow();
+        } else if (resultCode == 1) {
+            handleDeletePin(data);
+        } else if (resultCode == 2) {
+            handleSavePin(data);
+        }
+    }
+
+    private void handleDeletePin(Intent data) {
+        Bundle b = data.getExtras();
+        String tag = b.getString("tag");
+        UserPinHistory userPinHistory = getObjectFromSharedPreference("admin");
+        ArrayList<MyMarker> myMarkerList = userPinHistory.getMmk();
+        Iterator<MyMarker> iterator = myMarkerList.iterator();
+        while(iterator.hasNext()){
+            MyMarker mk = iterator.next();
+            String mkTag = mk.getMkTag();
+            if(mkTag.equals(tag)){
+                iterator.remove();
+                Toast.makeText(mContext, "Pin Removed",Toast.LENGTH_SHORT).show();
+            }
+        }
+        saveObjectToSharedPreference("admin",userPinHistory);
+    }
+
+    private void handleSavePin (Intent data) {
+        Bundle b = data.getExtras();
+        String color = b.getString("color");
+        String note = b.getString("note");
+        Double lat = b.getDouble("lat");
+        Double lng = b.getDouble("lng");
+        String tag = b.getString("tag");
+        String pinStatus = b.getString("status");
+        UserPinHistory userPinHistory = getObjectFromSharedPreference("admin");
+        //Toast.makeText(mContext, tag + lat + lng + color + note,Toast.LENGTH_SHORT).show();
+        if (pinStatus.equals("old")) {
+            MyMarker updateMarker = userPinHistory.getMmk().get(Integer.valueOf(tag));
+            updateMarker.setMkLat(lat);
+            updateMarker.setMkLnt(lng);
+            updateMarker.setMkColor(color);
+            updateMarker.setMkDescription(note);
+        }else{
+            MyMarker myMarker = new MyMarker(tag, lat, lng, color, note);
+            userPinHistory.getMmk().add(myMarker);
+        }
+        saveObjectToSharedPreference("admin",userPinHistory);
+    }
+
+    public void saveObjectToSharedPreference(String key, Object obj) {
+        Gson gson = new Gson();
+        String jsonObj = gson.toJson(obj);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString(key, jsonObj);
+        editor.commit();
+    }
+
+    public UserPinHistory getObjectFromSharedPreference(String key) {
+
+        Gson gson = new Gson();
+        String str = preferences.getString(key, null);
+        if (str == null) {//first empty
+            return new UserPinHistory();
+        } else {
+            try {
+                return gson.fromJson(str, UserPinHistory.class);
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Can not get object with key " + key);
             }
         }
     }
+
+    private void showMarkerFromSharedPreference(UserPinHistory pinHistory) {
+        ArrayList<MyMarker> myMarkerList = pinHistory.getMmk();
+        Iterator<MyMarker> iterator = myMarkerList.iterator();
+        int count = 0;
+        while(iterator.hasNext()){
+            MyMarker mk = iterator.next();
+            LatLng l =new LatLng(mk.getMkLat(),mk.getMkLnt());
+            Marker marker = googleMap.addMarker(new MarkerOptions().position(l));
+            setMarkerColor(marker, mk.getMkColor());
+            marker.setSnippet(mk.getMkDescription());
+            marker.setTag(String.valueOf(count));
+            mk.setMkTag(String.valueOf(count));//
+            marker.showInfoWindow();
+            count ++;
+        }
+        UserPinHistory latestPinHistory = new UserPinHistory();
+        latestPinHistory.setMmk(myMarkerList);
+        saveObjectToSharedPreference("admin",latestPinHistory);
+    }
+
 
     private void setMarkerColor(Marker marker, String color) {
         switch (color) {

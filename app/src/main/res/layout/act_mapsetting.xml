@@ -61,10 +61,15 @@
         android:gravity="center"
         android:orientation="horizontal"
         >
-        <TextView
-            android:layout_width="wrap_content"
+        <EditText
+            android:id="@+id/et_addNote"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Add Note"
+            android:gravity="center"
+            android:hint="Add Note"
+            android:maxLines="4"
+            android:inputType="text"
+            android:imeOptions="actionDone"
             android:textSize="40px"/>
 
     </LinearLayout>

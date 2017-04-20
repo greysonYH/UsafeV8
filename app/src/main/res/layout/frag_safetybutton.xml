@@ -1,15 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:custom="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id ="@+id/frag_safetybutton">
     <include layout="@layout/frag_button_top"/>
 
-    <TextView
+    <com.example.greyson.test1.widget.CountDownView
+        android:id="@+id/countdownview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        custom:showSec="true"
         android:gravity="center"
-        android:text="Safety Button Coming Soon"/>
+        custom:numberColor="@android:color/black"
+        custom:unitColor="@android:color/black" />
 
 </LinearLayout>

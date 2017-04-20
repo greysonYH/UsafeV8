@@ -10,6 +10,7 @@
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
 
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
 
     <application
         android:name=".config.WSAppContext"
@@ -45,6 +46,9 @@
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
+
+        <service android:name="com.example.greyson.test1.core.TimerService"/>
+
     </application>
 
 </manifest>

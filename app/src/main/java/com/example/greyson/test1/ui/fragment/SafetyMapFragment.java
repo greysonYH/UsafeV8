@@ -246,7 +246,18 @@ public class SafetyMapFragment extends BaseFragment implements GoogleApiClient.C
         double currentLatitude = location.getLatitude();
         double currentLongitude = location.getLongitude();
         LatLng latLng = new LatLng(currentLatitude, currentLongitude);
+        saveLastLocationToSharedPreference(latLng);
         return latLng;
+    }
+
+    private void saveLastLocationToSharedPreference(LatLng latLng) {
+            String lat = String.valueOf(latLng.latitude);
+            String lng = String.valueOf(latLng.longitude);
+            SharedPreferences preferences1 = mContext.getSharedPreferences("LastLocation",MODE_PRIVATE);
+            SharedPreferences.Editor editor = preferences1.edit();
+            editor.putString("last location", lat + "," + lng);
+            editor.commit();
+
     }
 
     @Override
@@ -303,11 +314,7 @@ public class SafetyMapFragment extends BaseFragment implements GoogleApiClient.C
         googleMap.animateCamera(CameraUpdateFactory.zoomTo(14));
         handleNewLocation();
     }
-    private void initPinMap1() {
-        LatLng latLng = getCurrentLocation();
-        googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-        googleMap.animateCamera(CameraUpdateFactory.zoomTo(18));
-    }
+
     private void initPinMap() {
         googleMap.clear();
         LatLng latLng = getCurrentLocation();
@@ -552,9 +559,6 @@ public class SafetyMapFragment extends BaseFragment implements GoogleApiClient.C
 
     }
 
-    private void handleResult(String str) {
-
-    }
     @Override
     protected void destroyView() {
 

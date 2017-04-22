@@ -4,6 +4,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.view.View;
@@ -65,9 +67,9 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         mSafetyMoreFragment = new SafetyMoreFragment();
 
         mFragments.add(mSafetyMapFragment);
-        mFragments.add(mSafetyButtonFragment);
         mFragments.add(mSafetyTrackFragment);
         mFragments.add(mSafetyMoreFragment);
+        mFragments.add(mSafetyButtonFragment);
 
         mFragmentManager.beginTransaction().add(R.id.fl_main, mSafetyMapFragment, "0").commitAllowingStateLoss();
         mCurrentIndex = 0;
@@ -180,15 +182,15 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
                 mLLSafetyMap.setSelected(true);
                 break;
             case R.id.ll_safetybutton:
-                index = 1;
+                index = 3;
                 mLLSafetyButton.setSelected(true);
                 break;
             case R.id.ll_safetytrack:
-                index = 2;
+                index = 1;
                 mLLSafetyTrack.setSelected(true);
                 break;
             case R.id.ll_safetymore:
-                index = 3;
+                index = 2;
                 mLLSafetyMore.setSelected(true);
                 break;
         }
@@ -207,5 +209,39 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         fragmentTransaction.hide(mFragments.get(mCurrentIndex));
         fragmentTransaction.commitAllowingStateLoss();
         mCurrentIndex = index;
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        Bundle b = intent.getExtras();
+        int extra = b.getInt("notification");
+        switch (extra){
+            case 0:
+                onClick(mLLSafetyButton);
+                break;
+            case 1:
+                setSafetyMapNotificationArg(1);
+                break;
+            case 2:
+                setSafetyMapNotificationArg(2);
+                break;
+        }
+    }
+    private void setSafetyMapNotificationArg(int index) {
+        Bundle args = new Bundle();
+        args.putInt("notification", index);
+        SafetyButtonFragment newSafeButtonFragment = new SafetyButtonFragment();
+        newSafeButtonFragment.setArguments(args);
+        FragmentTransaction fragmentTransaction = mFragmentManager.beginTransaction();
+        fragmentTransaction.hide(mFragments.get(mCurrentIndex));
+        fragmentTransaction.remove(mFragments.get(3));
+        mFragments.remove(mFragments.get(3));
+        mFragments.add(newSafeButtonFragment);
+        fragmentTransaction.add(R.id.fl_main, newSafeButtonFragment, "3");
+        fragmentTransaction.show(newSafeButtonFragment);
+        fragmentTransaction.setTransitionStyle(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
+        fragmentTransaction.commitAllowingStateLoss();
+        mCurrentIndex = 3;
     }
 }

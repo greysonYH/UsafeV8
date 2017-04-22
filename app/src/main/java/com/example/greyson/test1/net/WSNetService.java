@@ -24,6 +24,6 @@ public interface WSNetService {
     Observable<SafePlaceRes> getSafePlaceData(@QueryMap Map<String, String> params);
 
     @GET("?format=json&")
-    Observable<SafePlaceRes> getSafePlaceRoute(@Url String lkj,@QueryMap Map<String, String> params);
+    Observable<SafePlaceRes> getSafePlaceRoute(@Url String url,@QueryMap Map<String, String> params);
 
 }

@@ -12,6 +12,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.service.notification.StatusBarNotification;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -30,6 +31,10 @@ import com.example.greyson.test1.core.TimerListener;
 import com.example.greyson.test1.ui.activity.MainActivity;
 import com.example.greyson.test1.ui.base.BaseFragment;
 import com.example.greyson.test1.widget.CountDownView;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import static android.app.Activity.RESULT_OK;
 import static android.app.PendingIntent.FLAG_IMMUTABLE;
@@ -95,16 +100,25 @@ public class SafetyButtonFragment extends BaseFragment implements View.OnClickLi
         }
     }
     private boolean checkContactNotEmpty() {
-        String[] ePhoneList = mTVContactNumber.getText().toString().split(" ");
-        if (ePhoneList.length == 2){
+        String[] ePhoneList = mTVContactNumber.getText().toString().split(":");
+        String[] eNameList = mTVContactName.getText().toString().split(":");
+        if (ePhoneList.length == 1){
             Toast.makeText(mContext, "You need choose contact first" , Toast.LENGTH_LONG).show();
             return false;
         }
+        saveLastContact(eNameList[1],ePhoneList[1]);
+        return true;
+    }
+    private boolean saveLastContact(String name, String phone) {
+        SharedPreferences preferences = mContext.getSharedPreferences("LastContact",MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString("contact", name + "," + phone);
+        editor.commit();
         return true;
     }
     private void sendMessageToContact() {
         //http://maps.google.com/maps?q=-37.886256,145.0543715
-        String[] ePhoneList = mTVContactNumber.getText().toString().split(" ");
+        String[] ePhoneList = mTVContactNumber.getText().toString().split(":");
         if (checkContactNotEmpty()){
             SharedPreferences preferences = mContext.getSharedPreferences("LastLocation",MODE_PRIVATE);
             String lastLocation = preferences.getString("last location",null);
@@ -112,14 +126,21 @@ public class SafetyButtonFragment extends BaseFragment implements View.OnClickLi
             String eMessage = "This is a emergency message, please call me first, press this link to see my last location: "
                     + baseMapUrl + lastLocation;
             SmsManager smsManager = SmsManager.getDefault();
-            smsManager.sendTextMessage(ePhoneList[2], null, eMessage, null, null);
+            smsManager.sendTextMessage(ePhoneList[1], null, eMessage, null, null);
             Toast.makeText(mContext, "SMS sent.", Toast.LENGTH_LONG).show();
         }
     }
 
     @Override
     protected void initData() {
-
+        SharedPreferences preferences = mContext.getSharedPreferences("LastContact",MODE_PRIVATE);
+        String lastContact = preferences.getString("contact",null);
+        if (lastContact == null) {
+            Toast.makeText(mContext, "Emergency Contact is Empty.", Toast.LENGTH_LONG).show();
+            return;
+        }
+        mTVContactName.setText("Contact Name:" + lastContact.split(",")[0]);
+        mTVContactNumber.setText("Contact Number:" + lastContact.split(",")[1]);
     }
 
     @Override
@@ -162,6 +183,8 @@ public class SafetyButtonFragment extends BaseFragment implements View.OnClickLi
     }
 
     private void startNotification() {
+        if(checkNotificaionExsist())
+            return;
         Intent intent = new Intent(mContext, MainActivity.class);
         intent.putExtra("notification",0);
         PendingIntent pIntent = PendingIntent.getActivity(mContext, (int) System.currentTimeMillis(), intent,PendingIntent.FLAG_UPDATE_CURRENT);
@@ -179,7 +202,7 @@ public class SafetyButtonFragment extends BaseFragment implements View.OnClickLi
 
         Notification n  = new NotificationCompat.Builder(mContext)
                 .setContentTitle("Welcome to use U-Safe")
-                .setContentText("Subject")
+                .setContentText("Click to enter application")
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentIntent(pIntent)
                 .setAutoCancel(true)
@@ -191,15 +214,26 @@ public class SafetyButtonFragment extends BaseFragment implements View.OnClickLi
                 .addAction(action1)
                 .addAction(action2)
                 .build();
-
         NotificationManager notificationManager =
                 (NotificationManager) mContext.getSystemService(NOTIFICATION_SERVICE);
-        notificationManager.notify(0, n);
+        notificationManager.notify("usafe",666,n);
+    }
+
+    private boolean checkNotificaionExsist() {
+        NotificationManager notificationManager = (NotificationManager) mContext.getSystemService(NOTIFICATION_SERVICE);
+        StatusBarNotification[] s = notificationManager.getActiveNotifications();///Min 23 API
+        int nLength = s.length;
+        for (int i = 0;i< nLength; i++) {
+            if(s[i].getTag().equals("usafe"))
+                return true;
+        }
+        return false;
     }
     private void settingButton() {
         Intent contactPickerIntent = new Intent(Intent.ACTION_PICK,
                 ContactsContract.CommonDataKinds.Phone.CONTENT_URI);
         startActivityForResult(contactPickerIntent, RESULT_PICK_CONTACT);
+
     }
 
     @Override

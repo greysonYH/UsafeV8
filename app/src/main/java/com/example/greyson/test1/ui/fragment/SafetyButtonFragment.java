@@ -197,13 +197,13 @@ public class SafetyButtonFragment extends BaseFragment implements View.OnClickLi
         intent2.putExtra("notification",2);
         PendingIntent pIntent2 = PendingIntent.getActivity(mContext, (int) System.currentTimeMillis(), intent2, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        NotificationCompat.Action action1 = new NotificationCompat.Action.Builder(R.mipmap.ic_launcher,"Start Timer",pIntent1).build();
-        NotificationCompat.Action action2 = new NotificationCompat.Action.Builder(R.mipmap.ic_launcher,"Reset Timer",pIntent2).build();
+        NotificationCompat.Action action1 = new NotificationCompat.Action.Builder(R.drawable.start_24,"Start Timer",pIntent1).build();
+        NotificationCompat.Action action2 = new NotificationCompat.Action.Builder(R.drawable.stop_24,"Reset Timer",pIntent2).build();
 
         Notification n  = new NotificationCompat.Builder(mContext)
                 .setContentTitle("Welcome to use U-Safe")
                 .setContentText("Click to enter application")
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(R.drawable.ic_launcher_m)
                 .setContentIntent(pIntent)
                 .setAutoCancel(true)
                 .setOngoing(true)
